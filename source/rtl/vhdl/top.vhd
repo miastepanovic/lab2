@@ -156,6 +156,8 @@ architecture rtl of top is
   signal dir_blue            : std_logic_vector(7 downto 0);
   signal dir_pixel_column    : std_logic_vector(10 downto 0);
   signal dir_pixel_row       : std_logic_vector(10 downto 0);
+  
+  signal next_char_address   : std_logic_vector(MEM_ADDR_WIDTH-1 downto 0);
 
 begin
 
@@ -168,8 +170,8 @@ begin
   graphics_lenght <= conv_std_logic_vector(MEM_SIZE*8*8, GRAPH_MEM_ADDR_WIDTH);
   
   -- removed to inputs pin
-  direct_mode <= '1';
-  display_mode     <= "10";  -- 01 - text mode, 10 - graphics mode, 11 - text & graphics
+  direct_mode <= '0';
+  display_mode     <= "01";  -- 01 - text mode, 10 - graphics mode, 11 - text & graphics
   
   font_size        <= x"1";
   show_frame       <= '1';
@@ -283,6 +285,70 @@ dir_blue <=    x"FF" when dir_pixel_column <= 1*(H_RES/8) else
   --char_address
   --char_value
   --char_we
+  
+  
+char_we <= '1';
+--char_value <= "000001";
+--char_address <= conv_std_logic_vector(80,14);
+
+
+
+--process(char_address) begin
+--	if(next_char_address = 4800-1) then
+--		next_char_address <= (others => '0');
+--	else
+--		next_char_address <= next_char_address+1;
+--	end if;
+--end process;
+
+	process(pix_clock_s)begin
+		if(rising_edge(pix_clock_s))then
+			if(char_address = 4800-1)then
+				char_address <= (others => '0');
+			else
+				char_address <= char_address + 1;
+			end if;
+		end if;
+  end process;
+
+
+--
+ process(char_address)begin
+		if(char_address = 81)then
+			char_address <= (char_address);
+			char_value <= conv_std_logic_vector(13,6); --M
+		elsif(char_address = 82)then
+			char_address <= (char_address);
+			char_value <= conv_std_logic_vector(9,6);	--I
+		elsif(char_address = 83)then
+			char_address <= (char_address);
+			char_value <= conv_std_logic_vector(1,6);	--A
+		elsif(char_address = 84)then
+			char_address <= (char_address);
+			char_value <= conv_std_logic_vector(32,6);	--SPACE
+		elsif(char_address = 85)then
+			char_address <= (char_address);
+			char_value <= conv_std_logic_vector(12,6);	--L
+		elsif(char_address = 86)then
+			char_address <= (char_address);
+			char_value <= conv_std_logic_vector(1,6);	--A
+		elsif(char_address = 87)then
+			char_address <= (char_address);
+			char_value <= conv_std_logic_vector(12,6);	--L
+		elsif(char_address = 88)then
+			char_address <= (char_address);
+			char_value <= conv_std_logic_vector(5,6);	--E
+		else
+			char_address <= (char_address);
+			char_value <= conv_std_logic_vector(32,6);	--SPACE
+		end if;	
+  end process;
+
+
+
+ 
+ 
+ 		
   
   
   
