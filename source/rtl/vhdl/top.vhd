@@ -23,6 +23,8 @@ entity top is
   port (
     clk_i          : in  std_logic;
     reset_n_i      : in  std_logic;
+	 direct_mode_i  : in  std_logic;
+	 display_mode_i : in  std_logic_vector(1 downto 0);
     -- vga
     vga_hsync_o    : out std_logic;
     vga_vsync_o    : out std_logic;
@@ -33,6 +35,7 @@ entity top is
     red_o          : out std_logic_vector(7 downto 0);
     green_o        : out std_logic_vector(7 downto 0);
     blue_o         : out std_logic_vector(7 downto 0)
+	 
    );
 end top;
 
@@ -130,7 +133,7 @@ architecture rtl of top is
   signal message_lenght      : std_logic_vector(MEM_ADDR_WIDTH-1 downto 0);
   signal graphics_lenght     : std_logic_vector(GRAPH_MEM_ADDR_WIDTH-1 downto 0);
   
-  signal direct_mode         : std_logic;
+ -- signal direct_mode         : std_logic;
   --
   signal font_size           : std_logic_vector(3 downto 0);
   signal show_frame          : std_logic;
@@ -157,7 +160,9 @@ architecture rtl of top is
   signal dir_pixel_column    : std_logic_vector(10 downto 0);
   signal dir_pixel_row       : std_logic_vector(10 downto 0);
   
-  signal next_char_address   : std_logic_vector(MEM_ADDR_WIDTH-1 downto 0);
+  signal pomeranjeTeksta	  : std_logic_vector(MEM_ADDR_WIDTH-1 downto 0);
+   signal pomeranjeKocke	  : std_logic_vector(MEM_ADDR_WIDTH-1 downto 0);
+  signal impulsCounter		  : std_logic_vector(31 downto 0);
 
 begin
 
@@ -170,14 +175,14 @@ begin
   graphics_lenght <= conv_std_logic_vector(MEM_SIZE*8*8, GRAPH_MEM_ADDR_WIDTH);
   
   -- removed to inputs pin
-  direct_mode <= '0';
-  display_mode     <= "01";  -- 01 - text mode, 10 - graphics mode, 11 - text & graphics
+  --direct_mode <= '0';
+  --display_mode     <= "10";  -- 01 - text mode, 10 - graphics mode, 11 - text & graphics
   
   font_size        <= x"1";
   show_frame       <= '1';
   foreground_color <= x"FFFFFF";
-  background_color <= x"000000";
-  frame_color      <= x"FF0000";
+  background_color <= x"0000cc";
+  frame_color      <= x"000000";
 
   clk5m_inst : ODDR2
   generic map(
@@ -213,14 +218,14 @@ begin
     clk_i              => clk_i,
     reset_n_i          => reset_n_i,
     --
-    direct_mode_i      => direct_mode,
+    direct_mode_i      => direct_mode_i,
     dir_red_i          => dir_red,
     dir_green_i        => dir_green,
     dir_blue_i         => dir_blue,
     dir_pixel_column_o => dir_pixel_column,
     dir_pixel_row_o    => dir_pixel_row,
     -- cfg
-    display_mode_i     => display_mode,  -- 01 - text mode, 10 - graphics mode, 11 - text & graphics
+    display_mode_i     => display_mode_i,  -- 01 - text mode, 10 - graphics mode, 11 - text & graphics
     -- text mode interface
     text_addr_i        => char_address,
     text_data_i        => char_value,
@@ -293,13 +298,6 @@ char_we <= '1';
 
 
 
---process(char_address) begin
---	if(next_char_address = 4800-1) then
---		next_char_address <= (others => '0');
---	else
---		next_char_address <= next_char_address+1;
---	end if;
---end process;
 
 	process(pix_clock_s)begin
 		if(rising_edge(pix_clock_s))then
@@ -312,53 +310,100 @@ char_we <= '1';
   end process;
 
 
+process(pix_clock_s)begin
+		if(rising_edge(pix_clock_s))then
+				
+			if(impulsCounter = 12500000)then
+				impulsCounter <= (others => '0');
+				pomeranjeTeksta <= pomeranjeTeksta + 1;
+				if(pomeranjeTeksta = 4800) then
+					pomeranjeTeksta <= (others => '0');
+				end if;
+			else
+				pomeranjeTeksta <= pomeranjeTeksta;
+				impulsCounter <=impulsCounter+1;
+			end if;
+		
+		end if;
+  end process;
+
+
 --
  process(char_address)begin
-		if(char_address = 81)then
-			char_address <= (char_address);
+		if(char_address = pomeranjeTeksta)then
 			char_value <= conv_std_logic_vector(13,6); --M
-		elsif(char_address = 82)then
-			char_address <= (char_address);
+		elsif(char_address = pomeranjeTeksta+1)then
 			char_value <= conv_std_logic_vector(9,6);	--I
-		elsif(char_address = 83)then
-			char_address <= (char_address);
+		elsif(char_address = pomeranjeTeksta+2)then
 			char_value <= conv_std_logic_vector(1,6);	--A
-		elsif(char_address = 84)then
-			char_address <= (char_address);
+		elsif(char_address = pomeranjeTeksta+3)then
 			char_value <= conv_std_logic_vector(32,6);	--SPACE
-		elsif(char_address = 85)then
-			char_address <= (char_address);
+		elsif(char_address = pomeranjeTeksta+4)then
 			char_value <= conv_std_logic_vector(12,6);	--L
-		elsif(char_address = 86)then
-			char_address <= (char_address);
+		elsif(char_address = pomeranjeTeksta+5)then
 			char_value <= conv_std_logic_vector(1,6);	--A
-		elsif(char_address = 87)then
-			char_address <= (char_address);
+		elsif(char_address = pomeranjeTeksta+6)then
 			char_value <= conv_std_logic_vector(12,6);	--L
-		elsif(char_address = 88)then
-			char_address <= (char_address);
+		elsif(char_address =pomeranjeTeksta+7)then
 			char_value <= conv_std_logic_vector(5,6);	--E
 		else
-			char_address <= (char_address);
 			char_value <= conv_std_logic_vector(32,6);	--SPACE
 		end if;	
   end process;
 
 
-
- 
- 
- 		
-  
-  
-  
-  
-  
-  
   -- koristeci signale realizovati logiku koja pise po GRAPH_MEM
   --pixel_address
   --pixel_value
   --pixel_we
+  
+  pixel_we <= '1';
+  
+  process(pix_clock_s)begin
+		if(rising_edge(pix_clock_s))then
+			if(pixel_address = 9599)then
+				pixel_address <= (others => '0');
+			else
+				pixel_address <= pixel_address + 1;
+			end if;
+		end if;
+  end process;
+  
+  
+ 
+  
+  process(pixel_address)begin
+		if(pixel_address = 300)then
+			pixel_value <= "11111111111100000000000000000000";
+		elsif(pixel_address = 320)then
+			pixel_value <= "11111111111100000000000000000000";
+		elsif(pixel_address = 340)then
+			pixel_value <= "11111111111100000000000000000000";
+		elsif(pixel_address = 360)then
+			pixel_value <= "11111111111100000000000000000000";
+		elsif(pixel_address = 380)then
+			pixel_value <= "11111111111100000000000000000000";
+		elsif(pixel_address = 400)then
+			pixel_value <= "11111111111100000000000000000000";
+		elsif(pixel_address = 420)then
+			pixel_value <= "11111111111100000000000000000000";
+		elsif(pixel_address = 440)then
+			pixel_value <= "11111111111100000000000000000000";
+		elsif(pixel_address = 460)then
+			pixel_value <= "11111111111100000000000000000000";
+		elsif(pixel_address = 480)then
+			pixel_value <= "11111111111100000000000000000000";
+		elsif(pixel_address = 500)then
+			pixel_value <= "11111111111100000000000000000000";
+		elsif(pixel_address = 520)then
+			pixel_value <= "11111111111100000000000000000000";
+		else
+			pixel_value <= "00000000000000000000000000000000";
+		end if;	
+  end process;
+  
+ 
+  
   
   
 end rtl;
